@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Meme</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0e0e10; --surf:#18181b; --surf2:#222227; --border:#2e2e35;
+  --acc:#7c5cfc; --acc2:#6848f0; --accs:rgba(124,92,252,0.12);
+  --txt:#f0f0f2; --muted:#8888a0; --green:#22c55e; --greens:rgba(34,197,94,0.12);
+  --red:#ef4444; --r:10px;
+}
+body { background:var(--bg); color:var(--txt); font-family:system-ui,sans-serif; min-height:100vh; display:flex; flex-direction:column; font-size:13px; }
+header { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+.dot { width:8px;height:8px;background:var(--acc);border-radius:50%;box-shadow:0 0 8px var(--acc); }
+header h1 { font-size:14px;font-weight:600; }
+header span { font-size:11px;color:var(--muted);margin-left:auto; }
+.body { display:flex; flex:1; min-height:calc(100vh - 45px); }
+.side { width:260px;border-right:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:14px;overflow-y:auto; }
+.lbl { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px; }
+.iw { position:relative; }
+.iw input, select, input[type=number] { width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);color:var(--txt);font-size:12px;padding:8px 10px;outline:none;transition:border .2s; }
+.iw input { padding-right:30px;font-family:monospace; }
+.iw input:focus { border-color:var(--acc); }
+.eye { position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px; }
+select { appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238888a0' d='M5 7L1 2h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px; }
+.asts { margin-top:4px;font-size:11px;display:none; }
+.asts.ok{color:var(--green);display:block;} .asts.er{color:var(--red);display:block;}
+.crow { display:flex;align-items:center;gap:8px; }
+.crow input[type=number] { width:60px;text-align:center; }
+.clbl { font-size:12px;color:var(--muted); }
+.btn { width:100%;padding:10px;border-radius:var(--r);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px; }
+.btn-p { background:var(--acc);color:#fff; } .btn-p:hover{background:var(--acc2);} .btn-p:disabled{opacity:.4;cursor:not-allowed;}
+.btn-g { background:var(--green);color:#fff; } .btn-g:hover{background:#16a34a;} .btn-g:disabled{opacity:.4;cursor:not-allowed;}
+.btn-o { background:var(--surf2);color:var(--txt);border:1px solid var(--border); } .btn-o:hover{border-color:var(--acc);} .btn-o:disabled{opacity:.4;cursor:not-allowed;}
+.pw { display:none;flex-direction:column;gap:4px; } .pw.on{display:flex;}
+.track { width:100%;height:3px;background:var(--surf2);border-radius:2px;overflow:hidden; }
+.fill { height:100%;background:var(--acc);border-radius:2px;transition:width .3s;width:0%; }
+.pt { font-size:11px;color:var(--muted);text-align:center; }
+.sr { display:flex;gap:6px; }
+.st { flex:1;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:8px;text-align:center; }
+.sn { font-size:20px;font-weight:700;line-height:1; } .sn.bl{color:var(--acc);} .sn.gr{color:var(--green);}
+.sl { font-size:10px;color:var(--muted);margin-top:2px; }
+.cont { flex:1;padding:18px 22px;overflow-y:auto; }
+.ch { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
+.ch h2 { font-size:16px;font-weight:600; }
+.fts { display:flex;gap:3px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:2px; }
+.ft { padding:4px 10px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s; }
+.ft.on { background:var(--acc);color:#fff; }
+.empty { display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:8px;color:var(--muted); }
+.ei { font-size:40px;opacity:.3; }
+.gallery { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px; }
+.card { position:relative;border-radius:10px;overflow:hidden;border:2px solid var(--border);cursor:pointer;background:var(--surf);aspect-ratio:9/16;transition:all .2s; }
+.card:hover{border-color:var(--acc);transform:translateY(-2px);} .card.sel{border-color:var(--green);}
+.card img{width:100%;height:100%;object-fit:cover;display:block;}
+.cload{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:11px;}
+.spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 55%);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;justify-content:flex-end;padding:7px;gap:4px;}
+.card:hover .ov,.card.sel .ov{opacity:1;}
+.bdg{position:absolute;top:6px;right:6px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;display:none;}
+.card.sel .bdg{display:block;}
+.cnum{position:absolute;bottom:6px;left:7px;font-size:10px;color:rgba(255,255,255,.5);}
+.cbtn{width:100%;padding:5px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;}
+.cok{background:var(--green);color:#fff;}
+.cdl{background:rgba(255,255,255,0.15);color:#fff;margin-top:3px;}
+.cdl:hover{background:var(--acc);}
+.errbox{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--r);padding:10px;font-size:11px;color:var(--red);display:none;word-break:break-all;}
+.toast{position:fixed;bottom:16px;right:16px;background:var(--surf2);border:1px solid var(--border);color:var(--txt);font-size:12px;padding:10px 14px;border-radius:var(--r);box-shadow:0 8px 20px rgba(0,0,0,.4);transform:translateY(60px);opacity:0;transition:all .3s;z-index:999;}
+.toast.on{transform:translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+<header>
+  <div class="dot"></div>
+  <h1>Gerador de Meme</h1>
+  <span id="hs">Insira sua API Key para começar</span>
+</header>
+<div class="body">
+  <aside class="side">
+    <div>
+      <div class="lbl">API Key WaveSpeed</div>
+      <div class="iw">
+        <input type="password" id="akey" placeholder="wsk_live_..." oninput="onKey(this.value)">
+        <button class="eye" onclick="tgEye()">👁</button>
+      </div>
+      <div class="asts" id="ast"></div>
+    </div>
+    <div>
+      <div class="lbl">Cenário</div>
+      <select id="cen">
+        <option value="sala">Sala de aula</option>
+        <option value="patio">Pátio</option>
+        <option value="corredor">Corredor</option>
+        <option value="todos">Variado (todos)</option>
+      </select>
+    </div>
+    <div>
+      <div class="lbl">Quantidade</div>
+      <div class="crow">
+        <input type="number" id="qty" value="3" min="1" max="50">
+        <span class="clbl">imagens</span>
+      </div>
+    </div>
+    <button class="btn btn-p" id="bg" onclick="iniciar()" disabled>⚡ Gerar Imagens</button>
+    <div class="pw" id="pw">
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="pt" id="pt">Aguardando...</div>
+    </div>
+    <div class="errbox" id="errbox"></div>
+    <div class="sr">
+      <div class="st"><div class="sn bl" id="st1">0</div><div class="sl">Geradas</div></div>
+      <div class="st"><div class="sn gr" id="st2">0</div><div class="sl">Selecionadas</div></div>
+    </div>
+    <button class="btn btn-g" id="bdl" onclick="downloadSelecionadas()" disabled>⬇️ Baixar Selecionadas</button>
+  </aside>
+  <main class="cont">
+    <div class="ch">
+      <h2 id="gt">Aguardando geração...</h2>
+      <div class="fts" id="fts" style="display:none">
+        <button class="ft on" onclick="filtrar('t',this)">Todas</button>
+        <button class="ft" onclick="filtrar('a',this)">Selecionadas</button>
+        <button class="ft" onclick="filtrar('n',this)">Não selecionadas</button>
+      </div>
+    </div>
+    <div class="empty" id="emp"><div class="ei">🎬</div><p>Configure e clique em <strong>Gerar Imagens</strong></p><p style="font-size:11px">As imagens aparecerão aqui para você selecionar e baixar</p></div>
+    <div class="gallery" id="gal" style="display:none"></div>
+  </main>
+</div>
+<div class="toast" id="tst"></div>
+<script>
+const PROXY='https://wavespeed-proxy.leopossamaif10.workers.dev';
+
+// Prompts com mulher fixa: branca, cabelo liso
+// Homens: sem dreads, sem acessórios exagerados
+const P={
+  sala:[
+    "Realistic candid photo of 3 brazilian teenagers inside a public school classroom in Brazil, rows of desks and chairs, green chalkboard with handwritten text in background, fluorescent lighting, ceiling fan visible, school uniforms dark navy blue shirt Secretaria de Educacao logo. Characters: Boy 1 left: dark skin, short fade haircut, small gold chain, eyebrow slit, sitting at desk toward camera, big smile showing teeth, not blocking girl. Girl center: white skin, long straight dark hair, natural makeup, small hoop earrings, fully visible from waist up, arms around both boys, laughing naturally. Boy 2 right: medium skin, short curly hair, braces, slim, leaning toward camera smiling, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, caderno visible on desk, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers inside a public school classroom in Brazil, rows of desks and chairs, chalkboard in background, fluorescent lighting, school uniforms dark blue shirt school logo. Characters: Boy 1 left: very dark skin, very short fade with part line, small silver chain, wide grin showing teeth, arm around girl, not blocking her. Girl center: white skin, long straight brown hair, light freckles, small stud earrings, laughing with eyes squinted, fully visible from waist up, hands on boys shoulders. Boy 2 right: light brown skin, short afro hair, chubby face, braces, big open laugh, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, desks visible in foreground, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers inside a public school classroom in Brazil, green chalkboard with portuguese text, ceiling fan, fluorescent lighting, school uniforms dark navy blue shirt. Characters: Boy 1 left: dark brown skin, short cornrows, small gold chain, eyebrow slit, sitting sideways on chair, huge confident smile, not blocking girl. Girl center: white skin, long straight black hair, natural lip gloss, hoop earrings, fully visible from waist up, standing between boys, arms around both, soft smile. Boy 2 right: medium skin, very short buzz cut, thin beard starting, braces, tall and slim, peace sign hand, big smile, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers inside a public school classroom in Brazil, chalkboard background, fluorescent lighting, school uniforms dark blue shirt. Characters: Boy 1 left: dark skin, fade haircut with zigzag design on side, small chain, chubby face, big grin gap teeth, not blocking girl. Girl center: white skin, long straight light brown hair, dimples, small earrings, laughing genuinely, fully visible from waist up, arms around both boys. Boy 2 right: light brown skin, short curly hair, glasses, slim, braces, relaxed smile, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+  ],
+  patio:[
+    "Realistic candid photo of 3 brazilian teenagers in a public school patio in Brazil, outdoor corridor concrete pillars, worn blue and white walls, natural daylight, school uniforms dark navy blue shirt Secretaria de Educacao, students walking in background. Characters: Boy 1 left: dark skin, short fade haircut, small gold chain, eyebrow slit, chubby face, big smile showing teeth, not blocking girl. Girl center: white skin, long straight dark hair, natural makeup, small hoop earrings, fully visible from waist up, arms around both boys, genuine laugh. Boy 2 right: medium skin, short afro, thin beard, braces, slim, leaning toward camera smiling, not blocking girl. Girl waist fully visible, boys close but not blocking her, natural outdoor lighting, shot on iPhone eye level, blurred students background, photorealistic, candid school patio photo, brazilian features, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers in a public school patio in Brazil, outdoor corridor concrete pillars, worn blue and white walls, natural daylight, school uniforms dark navy blue shirt Secretaria de Educacao. Characters: Boy 1 left: very dark skin, very short fade, small silver chain, wide grin, hand on girl shoulder, not blocking her. Girl center: white skin, long straight blonde hair, light skin, freckles, small stud earrings, laughing naturally, fully visible from waist up. Boy 2 right: light brown skin, short curly hair, chubby, braces, big open smile, not blocking girl. Girl waist fully visible, boys close but not blocking her, natural outdoor lighting, shot on iPhone, blurred background, photorealistic, brazilian features, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers in a public school patio in Brazil, outdoor corridor concrete pillars, blue and white walls, natural daylight, school uniforms dark navy blue shirt. Characters: Boy 1 left: dark brown skin, short cornrows, small gold chain, eyebrow slit, tall, wide smile, arm around girl, not blocking her. Girl center: white skin, long straight dark brown hair, natural makeup, hoop earrings, laughing with squinted eyes, fully visible from waist up. Boy 2 right: medium skin, very short buzz cut, braces, slim, peace sign hand, big smile, not blocking girl. Girl waist fully visible, boys close but not blocking her, natural outdoor lighting, shot on iPhone, blurred background, photorealistic, candid patio photo, brazilian features, no AI look, raw photo style",
+  ],
+  corredor:[
+    "Realistic candid photo of 3 brazilian teenagers in a public school hallway in Brazil, tiled walls, fluorescent lighting, school uniforms dark blue shirt. Characters: Boy 1 left: dark skin, short fade, small gold chain, eyebrow slit, chubby, confident wide smile, arm around girl, not blocking her. Girl center: white skin, long straight dark hair, natural makeup, small hoop earrings, fully visible from waist up, holding both boys, laughing with squinted eyes. Boy 2 right: light brown skin, short afro hair, tall slim, small earring, braces, peace sign, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers in a public school hallway in Brazil, tiled walls, fluorescent lighting, school uniforms dark blue shirt. Characters: Boy 1 left: very dark skin, very short buzz cut, small chain, gap teeth smile, eyebrow slit, big laugh, not blocking girl. Girl center: white skin, long straight light brown hair, dimples, small stud earrings, fully visible from waist up, arms around both boys, soft natural smile. Boy 2 right: medium skin, short fade with part line, thin mustache, braces, slim, leaning toward camera, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+    "Realistic candid photo of 3 brazilian teenagers in a public school hallway in Brazil, tiled walls, fluorescent lighting, school uniforms dark blue shirt. Characters: Boy 1 left: dark brown skin, short cornrows, small gold chain, chubby face, wide smile showing teeth, arm around girl, not blocking her. Girl center: white skin, long straight black hair, freckles, hoop earrings, laughing naturally, fully visible from waist up. Boy 2 right: light skin, very short curly hair, glasses, slim, braces, relaxed smile, not blocking girl. Girl waist fully visible, boys close but not blocking her, photorealistic, shot on iPhone, candid group photo, natural skin tones, brazilian features, 9:16 vertical, hyperrealistic, no AI look, raw photo style",
+  ]
+};
+
+let key='',imgs=[],filtro='t';
+
+window.onload=function(){
+  const s=localStorage.getItem('wskey');
+  if(s){document.getElementById('akey').value=s;onKey(s);}
+};
+
+function onKey(v){
+  key=v.trim();
+  localStorage.setItem('wskey',key);
+  const s=document.getElementById('ast'),b=document.getElementById('bg');
+  if(key.length>20){s.textContent='✓ API Key salva';s.className='asts ok';b.disabled=false;document.getElementById('hs').textContent='Pronto para gerar';}
+  else{s.textContent='';s.className='asts';b.disabled=true;document.getElementById('hs').textContent='Insira sua API Key para começar';}
+}
+
+function tgEye(){const i=document.getElementById('akey');i.type=i.type==='password'?'text':'password';}
+function showErr(m){const e=document.getElementById('errbox');e.textContent=m;e.style.display='block';}
+function hideErr(){document.getElementById('errbox').style.display='none';}
+
+function getP(){
+  const c=document.getElementById('cen').value,q=parseInt(document.getElementById('qty').value);
+  let pool=c==='todos'?[...P.sala,...P.patio,...P.corredor]:P[c]||P.sala;
+  return Array.from({length:q},(_,i)=>pool[i%pool.length]);
+}
+
+async function callWS(prompt){
+  const r=await fetch(`${PROXY}/api/v3/openai/gpt-image-2/text-to-image`,{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},
+    body:JSON.stringify({prompt,size:'9:16',num_images:1})
+  });
+  const d=await r.json();
+  if(!r.ok) throw new Error(`Erro ${r.status}: ${d?.message||JSON.stringify(d)}`);
+  const id=d?.data?.id;
+  if(!id) throw new Error('Task ID não retornado: '+JSON.stringify(d));
+  for(let i=0;i<60;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    const pr=await fetch(`${PROXY}/api/v3/predictions/${id}/result`,{headers:{'Authorization':`Bearer ${key}`}});
+    const pd=await pr.json();
+    const st=pd?.data?.status;
+    if(st==='completed'){const out=pd?.data?.outputs;if(out&&out.length>0)return out[0];throw new Error('Sem imagem');}
+    if(st==='failed') throw new Error('Geração falhou');
+  }
+  throw new Error('Timeout');
+}
+
+async function iniciar(){
+  if(!key)return;hideErr();
+  const ps=getP();
+  imgs=ps.map((p,i)=>({id:i,prompt:p,url:null,st:'load',ok:false}));
+  document.getElementById('emp').style.display='none';
+  document.getElementById('gal').style.display='grid';
+  document.getElementById('fts').style.display='flex';
+  document.getElementById('gt').textContent=`Gerando ${ps.length} imagens...`;
+  document.getElementById('bg').disabled=true;
+  document.getElementById('pw').classList.add('on');
+  document.getElementById('st1').textContent='0';
+  renderGal();
+  let done=0,anyErr=null;
+  async function proc(img){
+    try{img.url=await callWS(img.prompt);img.st='ok';}
+    catch(e){img.st='err';anyErr=e.message;console.error(e);}
+    done++;
+    document.getElementById('fill').style.width=Math.round(done/imgs.length*100)+'%';
+    document.getElementById('pt').textContent=`${done} de ${imgs.length} geradas`;
+    document.getElementById('st1').textContent=imgs.filter(i=>i.st==='ok').length;
+    rCard(img);
+  }
+  for(let i=0;i<imgs.length;i+=2)await Promise.all(imgs.slice(i,i+2).map(proc));
+  document.getElementById('gt').textContent=`${imgs.length} imagens — clique para selecionar`;
+  document.getElementById('bg').disabled=false;
+  if(anyErr)showErr('⚠️ '+anyErr);else toast('✅ Geração concluída!');
+}
+
+function cardH(img){
+  if(img.st==='load')return`<div class="cload"><div class="spin"></div><span>Gerando...</span></div>`;
+  if(img.st==='err')return`<div class="cload" style="color:var(--red)">❌ Erro</div>`;
+  return`<img src="${img.url}" loading="lazy">
+    <div class="bdg">✓</div>
+    <span class="cnum">#${img.id+1}</span>
+    <div class="ov">
+      <button class="cbtn cok" onclick="tgOk(${img.id},event)">${img.ok?'✓ Selecionada':'✓ Selecionar'}</button>
+      <button class="cbtn cdl" onclick="dlOne(${img.id},event)">⬇️ Baixar</button>
+    </div>`;
+}
+
+function rCard(img){
+  const el=document.getElementById(`c${img.id}`);
+  if(!el)return;
+  el.className='card'+(img.ok?' sel':'');
+  el.innerHTML=cardH(img);
+}
+
+function renderGal(){
+  const g=document.getElementById('gal');g.innerHTML='';
+  const list=filtro==='a'?imgs.filter(i=>i.ok):filtro==='n'?imgs.filter(i=>!i.ok):imgs;
+  list.forEach(img=>{
+    const d=document.createElement('div');
+    d.className='card'+(img.ok?' sel':'');
+    d.id=`c${img.id}`;d.innerHTML=cardH(img);g.appendChild(d);
+  });
+}
+
+function tgOk(id,e){
+  e.stopPropagation();
+  const img=imgs.find(i=>i.id===id);if(!img)return;
+  img.ok=!img.ok;rCard(img);
+  const s=imgs.filter(i=>i.ok).length;
+  document.getElementById('st2').textContent=s;
+  document.getElementById('bdl').disabled=s===0;
+}
+
+function filtrar(t,btn){
+  filtro=t;
+  document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');renderGal();
+}
+
+async function dlOne(id,e){
+  e.stopPropagation();
+  const img=imgs.find(i=>i.id===id);
+  if(!img||!img.url)return;
+  await downloadUrl(img.url,`meme-frame1-${img.id+1}.jpg`);
+}
+
+async function downloadUrl(url,filename){
+  try{
+    const r=await fetch(url);
+    const blob=await r.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }catch(e){
+    // fallback: open in new tab
+    window.open(url,'_blank');
+  }
+}
+
+async function downloadSelecionadas(){
+  const selecionadas=imgs.filter(i=>i.ok&&i.url);
+  if(!selecionadas.length){toast('Nenhuma imagem selecionada');return;}
+  toast(`⬇️ Baixando ${selecionadas.length} imagens...`);
+  for(let i=0;i<selecionadas.length;i++){
+    await downloadUrl(selecionadas[i].url,`meme-frame1-${selecionadas[i].id+1}.jpg`);
+    await new Promise(r=>setTimeout(r,500));
+  }
+  toast(`✅ ${selecionadas.length} imagens baixadas!`);
+}
+
+function toast(msg){
+  const t=document.getElementById('tst');t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3000);
+}
+</script>
+</body>
+</html>
